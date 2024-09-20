@@ -33,7 +33,7 @@ class VoiceInput:
             print(f"Could not request results from Google Speech Recognition service; {e}")
             return None
 
-    def wait_for_wake_word(self, wake_word="hey gpt"):
+    def wait_for_wake_word(self, wake_word="Hey Harry"):
         print(f"Waiting for wake word: '{wake_word}'")
         user_input = self.listen()
         if user_input:
