@@ -27,7 +27,7 @@ class VoiceInput:
             print(f"Recognized: {text}")
             return text
         except sr.UnknownValueError:
-            print("Google Speech Recognition could not understand the audio")
+            print("Google Speech Recognition could not understand what is said")
             return None
         except sr.RequestError as e:
             print(f"Could not request results from Google Speech Recognition service; {e}")
