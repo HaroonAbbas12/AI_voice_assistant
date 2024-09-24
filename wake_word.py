@@ -3,6 +3,7 @@ import pyttsx3
 import openai
 from dotenv import load_dotenv
 import os
+import tiktoken  # Import the tiktoken library for token counting
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -10,17 +11,23 @@ load_dotenv()
 # Get the API key from the environment variable
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
+# Tokenizer setup for total tokens used calculation
+tokenizer = tiktoken.get_encoding("gpt2")
 class VoiceInput:
     def __init__(self):
         self.recognizer = sr.Recognizer()
         self.microphone = sr.Microphone()
 
-    def listen(self):
+    def listen(self, timeout=5):  # Added timeout parameter
         with self.microphone as source:
             print("Adjusting for ambient noise...")
             self.recognizer.adjust_for_ambient_noise(source)
             print("Listening...")
-            audio = self.recognizer.listen(source)
+            try:
+                audio = self.recognizer.listen(source, timeout=timeout)  # Set timeout here
+            except sr.WaitTimeoutError:
+                print("Listening timed out; no speech detected.")
+                return None
         try:
             print("Recognizing...")
             text = self.recognizer.recognize_google(audio)
@@ -33,26 +40,41 @@ class VoiceInput:
             print(f"Could not request results from Google Speech Recognition service; {e}")
             return None
 
-    def wait_for_wake_word(self, wake_word="Hey Harry"):
+    def wait_for_wake_word(self, wake_word="Hey Harry", max_attempts=3):
         print(f"Waiting for wake word: '{wake_word}'")
-        user_input = self.listen()
-        if user_input:
-            if wake_word.lower() in user_input.lower():
-                print(f"Wake word '{wake_word}' detected.")
-                return True
+        attempts = 0
+        while attempts < max_attempts:
+            user_input = self.listen()
+            if user_input:
+                if wake_word.lower() in user_input.lower():
+                    print(f"Wake word '{wake_word}' detected.")
+                    return True
+                else:
+                    print("Wake word not detected.")
             else:
-                print("Wake word not detected.")
-        else:
-            print("No audio detected.")
-        return False
+                print("No audio detected.")
+            
+            attempts += 1  # Increment attempts
+            print(f"Attempts: {attempts}/{max_attempts}")
+
+        print("Maximum attempts reached. Exiting...")
+        return False  # Return false if the wake word is not detected
 
 class GPTProcessor:
     def __init__(self):
         pass  # API key is already set globally by openai.api_key
 
+    def count_tokens(self, text):
+        return len(tokenizer.encode(text))
+
     def process(self, text):
         print("Processing with GPT-4o-mini...")
         try:
+            # Limit input tokens to 50
+            input_tokens = self.count_tokens(text)
+            if input_tokens > 50:
+                text = ' '.join(text.split()[:50]) + '...'  # Truncate to first 50 words
+
             response = openai.ChatCompletion.create(
                 model="gpt-4o-mini",
                 temperature=0,  # Set temperature to 0 for deterministic output
@@ -62,11 +84,22 @@ class GPTProcessor:
                 ]
             )
             message_content = response.choices[0].message['content'].strip()
+
+            # Token calculation for response
+            response_tokens = self.count_tokens(message_content)
+            if response_tokens > 40:  # Ensure response tokens do not exceed 40
+                word_list = message_content.split()
+                message_content = ' '.join(word_list[:40]) + '...'  # Truncate to first 40 words if necessary
+
+            total_tokens = input_tokens + response_tokens  # Total tokens used
+            print(f"Input tokens: {input_tokens}, Response tokens: {response_tokens}, Total tokens: {total_tokens}")
+
             print(f"GPT-4o-mini response: {message_content}")
             return message_content
         except Exception as e:
             print(f"Error processing the text: {e}")
             return None
+
 
 class VoiceOutput:
     def __init__(self):
@@ -76,6 +109,7 @@ class VoiceOutput:
         print(f"Speaking: {text}")
         self.engine.say(text)
         self.engine.runAndWait()
+
 
 class MainAssistant:
     def __init__(self):
@@ -96,6 +130,7 @@ class MainAssistant:
                     self.voice_output.speak("Sorry, I couldn't process that.")
             else:
                 self.voice_output.speak("Sorry, I didn't catch that.")
+
 
 if __name__ == "__main__":
     assistant = MainAssistant()
