@@ -1,40 +1,35 @@
 import openai
-from dotenv import load_dotenv
-import os
+from ..statics import OPENAI_API_KEY, MODEL_NAME, MAX_LIMIT_INPUT, LLM_TEMPERATURE
 
-# Load environment variables from the .env file
-load_dotenv()
 # Get the API key from the environment variable
-openai.api_key = os.getenv('OPENAI_API_KEY')
-
-
+openai.api_key = OPENAI_API_KEY
 class GPTProcessor:
     def count_words(self, text):
         return len(text.split())
 
     def process(self, text):
-        print("Processing with GPT-4o-mini...")
+        print(f"Processing with {MODEL_NAME}...")
 
         try:
             # Count words in the input text
             input_words = self.count_words(text)
-            if input_words > 100:
-                # Truncate to the first 100 words
-                text = ' '.join(text.split()[:100]) + '...'
-                print(f"Truncated input to 50 words: {text}")
+            if input_words > MAX_LIMIT_INPUT:
+                # Truncate to the first MAX_LIMIT_INPUT words
+                text = ' '.join(text.split()[:MAX_LIMIT_INPUT]) + '...'
+                print(f"Truncated input to {MAX_LIMIT_INPUT} words: {text}")
 
             response = openai.ChatCompletion.create(
-                model="gpt-4o-mini",
-                temperature=0,
+                model=MODEL_NAME,
+                temperature=LLM_TEMPERATURE,
                 messages=[
-                    {"role": "system", "content": "Be concise and limit the response."},
+                    {"role": "system", "content": "You are a helpful assistant but are to the point. Be concise and limit the responses."},
                     {"role": "user", "content": text}
                 ]
             )
 
             message_content = response.choices[0].message['content'].strip()
             total_tokens = response['usage']['total_tokens']  # Get total tokens used in the request
-            print(f"GPT-4o-mini response: {message_content}")
+            print(f"{MODEL_NAME} response: {message_content}")
             print(f"Total tokens used: {total_tokens}")
 
             return message_content, total_tokens  # Return the message content and token usage

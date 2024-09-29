@@ -13,7 +13,7 @@ class MainAssistant:
         while True:
             # Wait for the wake word
             if self.voice_input.wait_for_wake_word():
-                self.voice_output.speak("Yes sir, how can I help you?")
+                self.voice_output.speak("How can I help you?")
                 user_input = self.voice_input.listen(timeout=5)
 
                 if user_input:

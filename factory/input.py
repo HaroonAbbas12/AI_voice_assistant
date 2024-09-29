@@ -1,5 +1,5 @@
 import speech_recognition as sr
-
+from ..statics import BOT_NAME
 
 class VoiceInput:
     def __init__(self):
@@ -25,7 +25,7 @@ class VoiceInput:
                 print(f"Could not request results from Google Speech Recognition service; {e}")
                 return None
 
-    def wait_for_wake_word(self, wake_word="Hey Bob"):
+    def wait_for_wake_word(self, wake_word=f"{BOT_NAME}"):
         while True:
             print(f"Waiting for wake word: '{wake_word}'")
             user_input = self.listen(timeout=10)  # Listen indefinitely
