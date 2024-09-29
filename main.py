@@ -1,4 +1,6 @@
-from factory import VoiceInput, GPTProcessor, VoiceOutput
+from factory.input import VoiceInput
+from factory.output import VoiceOutput
+from factory.llm import GPTProcessor
 
 class MainAssistant:
     def __init__(self):
