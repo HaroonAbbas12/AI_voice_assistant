@@ -9,7 +9,7 @@ class MainAssistant:
         self.voice_output = VoiceOutput()
 
     def run(self):
-        print("Starting the assistant...")
+        print("Starting the assistant..")
         while True:
             # Wait for the wake word
             if self.voice_input.wait_for_wake_word():

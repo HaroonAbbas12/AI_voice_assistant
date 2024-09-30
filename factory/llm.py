@@ -1,5 +1,5 @@
 import openai
-from ..statics import OPENAI_API_KEY, MODEL_NAME, MAX_LIMIT_INPUT, LLM_TEMPERATURE
+from statics import OPENAI_API_KEY, MODEL_NAME, MAX_LIMIT_INPUT, LLM_TEMPERATURE
 
 # Get the API key from the environment variable
 openai.api_key = OPENAI_API_KEY
